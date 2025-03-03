@@ -166,6 +166,10 @@ class Info(State):
         self.context.transition_to(LimpiezaDeDatos())
 
 
+#TODO Comprobar missing data en limpieza de datos
+#     Añadir representacion de datos
+
+
 
 if __name__ == "__main__":
     # The client code.
