@@ -97,24 +97,24 @@ class Salir(State):
         return
 
 
-class Main(State):
+class Main(State):  # Menu incial y principal
     def ejecutar(self):
-        # Loop para que te pregunte la funcion a usar.
+        # Solicita input para cambio de menu.
         while True:
-            tarea = input('Que quieres? (Limpieza/Representacion/Guardar/salir)').lower()
+            tarea: int = int(input('¿Que deseas hacer? Limpieza(1) Representacion(2) Guardar(3) salir(4))'))
 
             try:
-                if tarea == 'limpieza':
+                if tarea == 1:              # Entra dentro del menu Limpieza de Datos
                     self.context.transition_to(LimpiezaDeDatos())
 
-                elif tarea == 'representacion':
+                elif tarea == 2:            # Entra dentro del menu Representacion de Datos
                     self.context.transition_to(RepresentacionDatos())
 
-                elif tarea == 'guardar':
+                elif tarea == 3:            # Guardar archivo
                     nombre_archivo = input('¿Como deseas llamar a tu archivo?')
                     self.context._dataframe.to_csv(f'.//data/{nombre_archivo}.csv')
 
-                elif tarea == 'salir':
+                elif tarea == 4:            # Salir y cerrar programa
                     self.context.transition_to(Salir())
                     return False
                 # Devuelve un error si no exite el input
@@ -125,87 +125,118 @@ class Main(State):
                 print(f'Error: No existe esa función, volviendo a Main menu.')
 
 
-class LimpiezaDeDatos(State):
+class LimpiezaDeDatos(State):           # Menu limpieza de datos y manipulacion del dataFrame
     def ejecutar(self) -> None:
-        tarea = input('¿Que deseas hacer? (NAs/Borrar/Duplicados/Info/TestMostrar/Atras)').lower()   
-
-        if tarea == 'borrar':
-            self.context.transition_to(BorrarCol())
-
-        elif tarea == 'duplicados':
-            self.context.transition_to(DuplicadosCol())
-
-        elif tarea == 'info':
-            self.context.transition_to(Info())
-
-        elif tarea == 'nas':
+        #Solicita input al usuario para entrar en siguiente menu
+        tarea = int(input('¿Que deseas hacer? NAs(1) Borrar(2) Duplicados(3) Info(4) TestMostrar(5) Atras(6)'))   
+        
+        if tarea == 1:              #Menu limpiar NAs
             self.context.transition_to(MissingData())
 
-        elif tarea == 'testmostrar':
+        elif tarea == 2:            # Menu Borrar datos
+            self.context.transition_to(Borrar())
+
+        elif tarea == 3:            # Menu duplicados
+            self.context.transition_to(Duplicados())
+
+        elif tarea == 4:            # Menu Info
+            self.context.transition_to(Info())
+
+        elif tarea == 5:            # Mostrar datos
             self.context.transition_to(MostrarDatos())
 
-        elif tarea == 'atras':
+        elif tarea == 6:            # Vuelve al estado anterior
             self.context.transition_to(Main())
-        else:
-            print('No existe esa funcion, volviendo a Main_menu.')
 
-   
-class BorrarCol(State):
+        else:
+            print('No existe esa funcion o input invalido, volviendo a Main_menu.')
+
+
+
+class MissingData(State):               # Menu de comprobacion de NAs y Nulls
+    def ejecutar(self):
+
+        running = True
+        print(self.context._dataframe.head(10))         # Se imprimen las 10 primeras filas para dar contexto de los datos
+        
+        while running:
+            miss_option: int = int(input('Que deseas hacer? Comprobar NAs en todo el DF(1), en una columna(2) o volver(3): '))
+            
+            if miss_option == 1:                # Comprobar NAs en todo el DataFrame
+                print(f'Hay {self.context._dataframe.isna().sum()} valores NA en el Dataframe')
+            
+            elif miss_option == 2:                # Funcion comprobar NAs en columnas
+                miss_input: str = input(f'Escribe el nombre de la columna que deseas comprobar NAs, escribe "atras" para volver: ').strip()
+            
+                if miss_input.lower() == 'atras':
+                    running = False
+                
+                elif miss_input not in self.context._dataframe.columns:
+                    print(f"La columna '{miss_input}' no existe. Las columnas disponibles son: {list(self.context._dataframe.columns)}")
+
+                else:
+                    try:
+                        print(f'Hay {self.context._dataframe[miss_input].isna().sum()} NAs en la columna {miss_input}')
+
+                    except:
+                        print('Esa columna no existe.')
+
+            else:
+                running = False
+
+        self.context.transition_to(LimpiezaDeDatos())
+
+
+
+class Borrar(State):         # Menu borrado de elementos
     def ejecutar(self):
     
         print(self.context._dataframe.head(10))
         keep_deleting = True
 
-        while keep_deleting:
-        
-            del_input = input('Que columna deseas borrar, escribe "atras" para volver: ')
-        
-            if del_input.lower() == 'atras':
+        while keep_deleting:            # Bucle para mantenerse dentro del menu
+            del_options: int = int(input('¿Deseas borrar una fila(1) o borrar una columna(2)? O volver atras (3): '))
+            
+            if del_options == 1:                # Seleccionar fila para borrar
+                del_fila: int = int(input('Escribe el indice de la fila deseas borrar, escribe "atras" para volver: '))
+                
+                if del_fila == 'atras':
+                    keep_deleting = False
+
+                elif del_fila not in self.context._dataframe.index:
+                    print(f"La fila con indice '{del_fila}' no existe. Las medidas del dataframe son: {self.context._dataframe.shape}")
+
+                else:
+                    try:
+                        self.context._dataframe.drop(del_fila, axis=0, inplace=True)
+                        print('Indices actuales:', self.context._dataframe.index)
+                    except:
+                        print('Esa fila no existe.')
+
+            elif del_options == 2:              # Seleccionar columna para borrar
+                del_col: str = input('Que columna deseas borrar, escribe "atras" para volver: ').strip()
+            
+                if del_col.lower() == 'atras': # Salir del menu y volver al anterior
+                    keep_deleting = False
+
+                elif del_col not in self.context._dataframe.columns:
+                    print(f"La columna '{del_col}' no existe. Las columnas disponibles son: {list(self.context._dataframe.columns)}")
+
+                else:
+                    try:
+                        self.context._dataframe.drop(del_col, axis=1, inplace=True)
+                        print(self.context._dataframe.columns)
+                    except:
+                        print('Esa columna no existe.')
+            else:
                 keep_deleting = False
-
-            elif del_input not in self.context._dataframe.columns:
-                print(f"La columna '{del_input}' no existe. Las columnas disponibles son: {list(self.context._dataframe.columns)}")
-
-            else:
-                try:
-                    self.context._dataframe.drop(del_input, axis=1, inplace=True)
-                    print(self.context._dataframe.columns)
-                except:
-                    print('Esa columna no exite.')
         
-        self.context.transition_to(LimpiezaDeDatos())
-
-# TODO Implementar visualizacion de NAs en todo el dataframe
-
-class MissingData(State):
-    def ejecutar(self):
-
-        running = True
-        print(self.context._dataframe.head(10))
-        while running:
-            
-            miss_input: str = input(f'Escribe el nombre de la columna que deseas comprobar NAs, escribe "atras" para volver: ')
-            
-            if miss_input.lower() == 'atras':
-                running = False
-            
-            elif miss_input not in self.context._dataframe.columns:
-                print(f"La columna '{miss_input}' no existe. Las columnas disponibles son: {list(self.context._dataframe.columns)}")
-
-            else:
-                try:
-                    print(f'Hay {self.context._dataframe[miss_input].isna().sum()} NAs en la columna {miss_input}')
-
-                except:
-                    print('Esa columna no exite.')
-
-
         self.context.transition_to(LimpiezaDeDatos())
 
 
 # TODO Añadir funcion para comprobar todo el DF
 
-class DuplicadosCol(State):
+class Duplicados(State):
     def ejecutar(self):
     
         print(self.context._dataframe.head(10))
@@ -213,18 +244,26 @@ class DuplicadosCol(State):
         keep_looking = True
 
         while keep_looking:
+            dup_option: int = int(input('Que deseas hacer? Comprobar si hay filas duplicadas(1), o duplicados en una columna(2) o volver(3): '))
             
-            dup_input: str = input('Que columna deseas comprobar duplicados, escribe "atras" para volver: ')
-            
-            if dup_input.lower() == 'atras':
-                keep_looking = False
-            
-            elif dup_input not in self.context._dataframe.columns:
-                print(f"La columna '{dup_input}' no existe. Las columnas disponibles son: {list(self.context._dataframe.columns)}")
+            if dup_option == 1:
+                print(f'Hay {self.context._dataframe.duplicated().sum()} columnas duplicadas en el Dataframe')
+                      
+            elif dup_option == 2:
+                dup_input: str = input('Que columna deseas comprobar duplicados, escribe "atras" para volver: ')
+                
+                if dup_input.lower() == 'atras':
+                    keep_looking = False
+                 
+                elif dup_input not in self.context._dataframe.columns:
+                    print(f"La columna '{dup_input}' no existe. Las columnas disponibles son: {list(self.context._dataframe.columns)}")
 
+                else:
+                    duplicate_count = self.context._dataframe[dup_input].duplicated().sum()
+                    print(f'Hay {duplicate_count} valores duplicados en la columna {dup_input}')
             else:
-                duplicate_count = self.context._dataframe[dup_input].duplicated().sum()
-                print(f'Hay {duplicate_count} duplicados en la columna {dup_input}')
+                keep_looking = False
+
         
         
         self.context.transition_to(LimpiezaDeDatos())
@@ -238,7 +277,7 @@ class Info(State):
         self.context.transition_to(LimpiezaDeDatos())
 
 # TODO Hacer esta clase accesible en cualquier momento.
-
+# Implementar mas funciones de visualizacion de datos, por ahora en test.
 class MostrarDatos(State):
     def ejecutar(self) -> None:
         opcion:int = int(input('Que deseas hacer? Mostrar 10 primeras filas(1) o una fila en concreto(2): '))
@@ -274,94 +313,3 @@ if __name__ == "__main__":
     # The client code.
 
     context = Context()
-
-
-
-
-
-
-
-
-
-
-
-
-
-'''
-
-# Funcion principal con opciones posibles
-def main(dataframe):
-
-    active = True
-
-    while active:
-
-        tarea = input('Que quieres? (info/borrar/duplicados/salir/guardar)').lower()
-        
-        if tarea == 'salir':
-            break
-        
-        elif tarea == 'borrar':
-            borrar_columnas(dataframe)
-
-        elif tarea == 'info':
-            print(df.info())
-
-        elif tarea == 'duplicados':
-            comprobar_duplicados(dataframe)
-        
-        elif tarea == 'guardar':
-            nombre_archivo = input('¿Como deseas llamar a tu archivo?')
-            df.to_csv(f'.//data/{nombre_archivo}.csv')
-        
-
-categoricas = []
-
-numericas = []
-
-
-
-def comprobar_duplicados(dataframe):
-
-    print(dataframe.head(10))
-
-    keep_looking = True
-
-    while keep_looking:
-        
-        dup_input: str = input('Que columna deseas comprobar duplicados, escribe "no" si quieres salir: ')
-        
-        if dup_input.lower() == 'no':
-            keep_looking = False
-          
-        if dup_input not in dataframe.columns:
-            print(f"La columna '{dup_input}' no existe. Las columnas disponibles son: {list(dataframe.columns)}")
-
-        else:
-            duplicate_count = dataframe[dup_input].duplicated().sum()
-            print(f'Hay {duplicate_count} duplicados en la columna {dup_input}')
-            
-        print(dataframe.columns)
-
-
-
-
-def borrar_columnas(dataframe):
-    
-    print(dataframe.head(10))
-    keep_deleting = True
-
-    while keep_deleting:
-        
-        del_input = input('Que columna deseas borrar, escribe no si quieres salir: ')
-        
-        if del_input.lower() == 'no':
-            keep_deleting = False
-          
-        else:
-            dataframe.drop(del_input, axis=1, inplace=True)
-        print(dataframe.columns)
-
-
-
-main(df)'''
