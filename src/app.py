@@ -4,7 +4,21 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from abc import ABC, abstractmethod  # Se importa ABC y abstractmethod para definir clases abstractas
 
-#TODO Separar logica de IU y cambio de estados
+#TODO Separar logica de IU, cambio de estados y carga de archivo
+
+class UI:
+    #Creo clase con funcion estatica para que pueda ser llamada sin necesidad de instanciar
+    @staticmethod
+    def solicitar_input(mensaje):
+        return input(mensaje)
+    
+    @staticmethod
+    def mostrar_mensaje(mensaje):
+        print(mensaje)
+
+
+
+
 
 # --------------------------------------------------------------------
 # Clase Context
