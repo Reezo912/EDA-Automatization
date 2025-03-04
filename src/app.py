@@ -100,7 +100,7 @@ class Main(State):
 
 class LimpiezaDeDatos(State):
     def ejecutar(self) -> None:
-        tarea = input('Que quieres? (Borrar/Duplicados/Info/Atras)').lower()
+        tarea = input('¿Que quieres? (NAs/Borrar/Duplicados/Info/Atras)').lower()   
 
         if tarea == 'borrar':
             self.context.transition_to(BorrarCol())
@@ -111,8 +111,12 @@ class LimpiezaDeDatos(State):
         elif tarea == 'info':
             self.context.transition_to(Info())
 
+        elif tarea == 'nas':
+            self.context.transition_to(missing_data())
+
         elif tarea == 'atras':
             self.context.transition_to(Main())
+
 
 
 class RepresentacionDatos(State):
@@ -146,6 +150,27 @@ class BorrarCol(State):
         
         self.context.transition_to(LimpiezaDeDatos())
         
+class missing_data(State):
+    def ejecutar(self):
+
+        running = True
+        print(self.context._dataframe.head(10))
+        while running:
+            
+            miss_input: str = input(f'Escribe el nombre de la columna que deseas comprobar NAs, escribe "salir" si quieres salir: ')
+            
+            if miss_input.lower() == 'salir':
+                running = False
+            
+            elif miss_input not in self.context._dataframe.columns:
+                print(f"La columna '{miss_input}' no existe. Las columnas disponibles son: {list(self.context._dataframe.columns)}")
+
+            else:
+                duplicate_count = self.context._dataframe[miss_input].duplicated().sum()
+                print(f'Hay {duplicate_count} NAs en la columna {miss_input}')
+
+        self.context.transition_to(LimpiezaDeDatos())
+
 
 class DuplicadosCol(State):
     def ejecutar(self):
