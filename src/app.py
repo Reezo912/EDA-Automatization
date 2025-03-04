@@ -166,8 +166,8 @@ class missing_data(State):
                 print(f"La columna '{miss_input}' no existe. Las columnas disponibles son: {list(self.context._dataframe.columns)}")
 
             else:
-                duplicate_count = self.context._dataframe[miss_input].duplicated().sum()
-                print(f'Hay {duplicate_count} NAs en la columna {miss_input}')
+                
+                print(f'Hay {self.context._dataframe.isna()} NAs en la columna {miss_input}')
 
         self.context.transition_to(LimpiezaDeDatos())
 
