@@ -8,20 +8,6 @@ import sys
 
 #TODO Separar logica de IU, cambio de estados y carga de archivo
 
-class UI:
-    #Creo clase con funcion estatica para que pueda ser llamada sin necesidad de instanciar
-    @staticmethod
-    def solicitar_input(mensaje):
-        return input(mensaje)
-    
-    @staticmethod
-    def mostrar_mensaje(mensaje):
-        print(mensaje)
-
-
-
-
-
 # --------------------------------------------------------------------
 # Clase Context
 # --------------------------------------------------------------------
