@@ -3,6 +3,8 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 from abc import ABC, abstractmethod  # Se importa ABC y abstractmethod para definir clases abstractas
+import sys
+
 
 #TODO Separar logica de IU, cambio de estados y carga de archivo
 
@@ -94,7 +96,7 @@ class State(ABC):
 class Salir(State):
     def ejecutar(self):
         print('Saliendo del programa!')
-        return
+        sys.exit()
 
 
 class Main(State):  # Menu incial y principal
