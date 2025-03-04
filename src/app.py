@@ -17,23 +17,25 @@ class Context:
     _dataframe = None     # Atributo que contiene el DataFrame con los datos cargados
 
     def __init__(self):
-        archivo_no_existe = True
-        
         # Se utiliza un bucle para asegurarse de que el usuario ingrese un archivo válido.
-        while archivo_no_existe:
-            archivo_no_existe = False
+        while True:
+            # Se solicita el nombre del archivo al usuario.
+            n_archivo = input('Introduce el nombre del archivo, "abort" para salir: ')
+            # Funcion de salida
+            if n_archivo.lower() == 'abort':
+                print("Cerrando.")
+                return
 
             try:
-                # Se solicita el nombre del archivo al usuario.
-                n_archivo = input('Introduce el nombre del archivo: ')
                 # Se intenta cargar el archivo CSV en un DataFrame.
                 self._dataframe = pd.read_csv(f'.//data/{n_archivo}')
-                #df = pd.read_csv('.//data/Data.csv')
-
+                                                                                    #df = pd.read_csv('.//data/Data.csv') -- Activar para acceso rapido
+                # Si se carga el archivo correctamente, salimos del bucle.
+                break
             except FileNotFoundError:
                 # Si el archivo no existe, se notifica al usuario y se repite el proceso.
                 print('No existe ese archivo')
-                archivo_no_existe = True
+                
 
         # Una vez cargado el archivo correctamente, se inicia la transición al estado principal.
         self.transition_to(Main())
@@ -82,7 +84,7 @@ class Salir(State):
 class Main(State):
     def ejecutar(self):
         
-        tarea = input('Que quieres? (Limpieza/Representacion/Guardar/Stop)').lower()
+        tarea = input('Que quieres? (Limpieza/Representacion/Guardar/salir)').lower()
 
         if tarea == 'limpieza':
             self.context.transition_to(LimpiezaDeDatos())
@@ -95,6 +97,7 @@ class Main(State):
             self.context._dataframe.to_csv(f'.//data/{nombre_archivo}.csv')
 
         elif tarea == 'salir':
+            print('Cerrando. Adios!')
             self.context.transition_to(Salir())
 
 
@@ -112,7 +115,7 @@ class LimpiezaDeDatos(State):
             self.context.transition_to(Info())
 
         elif tarea == 'nas':
-            self.context.transition_to(missing_data())
+            self.context.transition_to(MissingData())
 
         elif tarea == 'atras':
             self.context.transition_to(Main())
@@ -149,8 +152,20 @@ class BorrarCol(State):
                     print('Esa columna no exite.')
         
         self.context.transition_to(LimpiezaDeDatos())
+
+
+class MostrarDatos(State):
+    def ejecutar(self) -> None:
+        input:int = int(input('Que deseas hacer? Mostrar 10 primeras filas(1) o una fila en concreto(2): '))
         
-class missing_data(State):
+        if input == 1:
+            
+            input2: int = int(input('Escribe el indice de la fila que quieres comprobar: '))
+            print(self.context._dataframe[input2])
+
+
+        
+class MissingData(State):
     def ejecutar(self):
 
         running = True
@@ -166,8 +181,12 @@ class missing_data(State):
                 print(f"La columna '{miss_input}' no existe. Las columnas disponibles son: {list(self.context._dataframe.columns)}")
 
             else:
-                
-                print(f'Hay {self.context._dataframe.isna()} NAs en la columna {miss_input}')
+                try:
+                    print(f'Hay {self.context._dataframe[miss_input].isna().sum()} NAs en la columna {miss_input}')
+
+                except:
+                    print('Esa columna no exite.')
+
 
         self.context.transition_to(LimpiezaDeDatos())
 
