@@ -4,6 +4,8 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from abc import ABC, abstractmethod  # Se importa ABC y abstractmethod para definir clases abstractas
 
+#TODO Separar logica de IU y cambio de estados
+
 # --------------------------------------------------------------------
 # Clase Context
 # --------------------------------------------------------------------
@@ -83,27 +85,35 @@ class Salir(State):
 
 class Main(State):
     def ejecutar(self):
-        
-        tarea = input('Que quieres? (Limpieza/Representacion/Guardar/salir)').lower()
+        # Loop para que te pregunte la funcion a usar.
+        while True:
+            tarea = input('Que quieres? (Limpieza/Representacion/Guardar/salir)').lower()
 
-        if tarea == 'limpieza':
-            self.context.transition_to(LimpiezaDeDatos())
+            try:
+                if tarea == 'limpieza':
+                    self.context.transition_to(LimpiezaDeDatos())
 
-        elif tarea == 'representacion':
-            self.context.transition_to(RepresentacionDatos())
+                elif tarea == 'representacion':
+                    self.context.transition_to(RepresentacionDatos())
 
-        elif tarea == 'guardar':
-            nombre_archivo = input('¿Como deseas llamar a tu archivo?')
-            self.context._dataframe.to_csv(f'.//data/{nombre_archivo}.csv')
+                elif tarea == 'guardar':
+                    nombre_archivo = input('¿Como deseas llamar a tu archivo?')
+                    self.context._dataframe.to_csv(f'.//data/{nombre_archivo}.csv')
 
-        elif tarea == 'salir':
-            print('Cerrando. Adios!')
-            self.context.transition_to(Salir())
+                elif tarea == 'salir':
+                    self.context.transition_to(Salir())
+                    return False
+                # Devuelve un error si no exite el input
+                else:
+                    print("Opción no reconocida, intenta de nuevo.")
+
+            except:
+                print(f'Error: No existe esa función, volviendo a Main menu.')
 
 
 class LimpiezaDeDatos(State):
     def ejecutar(self) -> None:
-        tarea = input('¿Que quieres? (NAs/Borrar/Duplicados/Info/Atras)').lower()   
+        tarea = input('¿Que deseas hacer? (NAs/Borrar/Duplicados/Info/TestMostrar/Atras)').lower()   
 
         if tarea == 'borrar':
             self.context.transition_to(BorrarCol())
@@ -117,17 +127,15 @@ class LimpiezaDeDatos(State):
         elif tarea == 'nas':
             self.context.transition_to(MissingData())
 
+        elif tarea == 'testmostrar':
+            self.context.transition_to(MostrarDatos())
+
         elif tarea == 'atras':
             self.context.transition_to(Main())
+        else:
+            print('No existe esa funcion, volviendo a Main_menu.')
 
-
-
-class RepresentacionDatos(State):
-    def ejecutar(self) -> None:
-        tarea = input('Que quieres? (volver)').lower()
-        self.context.transition_to(Main())
-
-        
+   
 class BorrarCol(State):
     def ejecutar(self):
     
@@ -136,9 +144,9 @@ class BorrarCol(State):
 
         while keep_deleting:
         
-            del_input = input('Que columna deseas borrar, escribe "salir" si quieres salir: ')
+            del_input = input('Que columna deseas borrar, escribe "atras" para volver: ')
         
-            if del_input.lower() == 'salir':
+            if del_input.lower() == 'atras':
                 keep_deleting = False
 
             elif del_input not in self.context._dataframe.columns:
@@ -153,18 +161,8 @@ class BorrarCol(State):
         
         self.context.transition_to(LimpiezaDeDatos())
 
+# TODO Implementar visualizacion de NAs en todo el dataframe
 
-class MostrarDatos(State):
-    def ejecutar(self) -> None:
-        input:int = int(input('Que deseas hacer? Mostrar 10 primeras filas(1) o una fila en concreto(2): '))
-        
-        if input == 1:
-            
-            input2: int = int(input('Escribe el indice de la fila que quieres comprobar: '))
-            print(self.context._dataframe[input2])
-
-
-        
 class MissingData(State):
     def ejecutar(self):
 
@@ -172,9 +170,9 @@ class MissingData(State):
         print(self.context._dataframe.head(10))
         while running:
             
-            miss_input: str = input(f'Escribe el nombre de la columna que deseas comprobar NAs, escribe "salir" si quieres salir: ')
+            miss_input: str = input(f'Escribe el nombre de la columna que deseas comprobar NAs, escribe "atras" para volver: ')
             
-            if miss_input.lower() == 'salir':
+            if miss_input.lower() == 'atras':
                 running = False
             
             elif miss_input not in self.context._dataframe.columns:
@@ -191,6 +189,8 @@ class MissingData(State):
         self.context.transition_to(LimpiezaDeDatos())
 
 
+# TODO Añadir funcion para comprobar todo el DF
+
 class DuplicadosCol(State):
     def ejecutar(self):
     
@@ -200,9 +200,9 @@ class DuplicadosCol(State):
 
         while keep_looking:
             
-            dup_input: str = input('Que columna deseas comprobar duplicados, escribe "salir" si quieres salir: ')
+            dup_input: str = input('Que columna deseas comprobar duplicados, escribe "atras" para volver: ')
             
-            if dup_input.lower() == 'salir':
+            if dup_input.lower() == 'atras':
                 keep_looking = False
             
             elif dup_input not in self.context._dataframe.columns:
@@ -223,9 +223,36 @@ class Info(State):
         
         self.context.transition_to(LimpiezaDeDatos())
 
+# TODO Hacer esta clase accesible en cualquier momento.
 
-#TODO Comprobar missing data en limpieza de datos
-#     Añadir representacion de datos
+class MostrarDatos(State):
+    def ejecutar(self) -> None:
+        opcion:int = int(input('Que deseas hacer? Mostrar 10 primeras filas(1) o una fila en concreto(2): '))
+        
+        if opcion == 1:
+            print(self.context._dataframe.head(10))
+        
+        elif opcion == 2:
+            fila_i: int = int(input('Escribe el indice de la fila que quieres comprobar: '))
+            print(self.context._dataframe.iloc[fila_i])
+        
+        else:
+            print('Esa opcion no existe, volviendo a menu anterior.')
+
+        self.context.transition_to(LimpiezaDeDatos())
+
+
+
+
+
+
+#TODO Añadir representacion de datos
+
+class RepresentacionDatos(State):
+    def ejecutar(self) -> None:
+        tarea = input('Que quieres? (volver)').lower()
+        self.context.transition_to(Main())
+
 
 
 
