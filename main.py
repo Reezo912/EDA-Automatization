@@ -1,12 +1,10 @@
 # Ejecucion del programa
 
-# TODO Refactorizar codigo, try/catch dentro de context y division en scripts
-# TODO Eliminar funcion eliminar filas(No es necesaria) y reemplazar por eliminar duplicados
 # TODO Implementar que todas las salidas de menu sean el 0
-# TODO Implementar describe en Class Info
-# TODO Hacer esta clase accesible en cualquier momento.
-# Implementar mas funciones de visualizacion de datos, por ahora en test.
-# TODO Separar logica de IU, cambio de estados y carga de archivo
+# TODO Introducir UI
+# TODO Hacer Visualizacion de Dataframe disponible desde cualquier menu.
+# Implementar mas funciones de visualizacion del DataFrame: ver columnas/tipos de datos en columnas(dtype)
+# TODO continuar implementacion de Visualizacion de datos
 
 
 from context import Context

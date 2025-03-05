@@ -43,7 +43,7 @@ class MissingData(State):
         print(self.context._dataframe.head(10))
         while True:
             try:
-                miss_option = int(input('¿Qué deseas hacer? Comprobar NAs en todo el DF(1), en una columna(2) o volver(3): '))
+                miss_option = int(input('¿Qué deseas hacer? Comprobar NAs en todo el DF(1), en una columna(2) o volver(0): '))
             except ValueError:
                 print("Entrada inválida.")
                 continue
@@ -58,7 +58,7 @@ class MissingData(State):
                     print(f"La columna '{miss_input}' no existe. Las columnas disponibles son: {list(self.context._dataframe.columns)}")
                 else:
                     print(f'Hay {self.context._dataframe[miss_input].isna().sum()} NAs en la columna {miss_input}')
-            elif miss_option == 3:
+            elif miss_option == 0:
                 break
             else:
                 print("Opción no reconocida.")
@@ -71,25 +71,18 @@ class Borrar(State):
         print(self.context._dataframe.head(10))
         while True:
             try:
-                del_options = int(input('¿Deseas borrar una fila(1) o borrar una columna(2)? O volver atrás (3): '))
+                del_options = int(input('¿Deseas borrar todos los NA del DataFrame(1) o borrar una columna(2)? O volver atrás (3): '))
             except ValueError:
                 print("Entrada inválida.")
                 continue
 
             if del_options == 1:
-                user_input = input('Escribe el índice de la fila que deseas borrar, escribe "atras" para volver: ')
-                if user_input.lower() == 'atras':
-                    break
+                print(f'Hay {self.context._dataframe.isna().sum()} NAs en el DataFrame')
+                user_input = input('Introduce 1 para borrar todos los NAs del DataFrame: ')
+                if user_input == 1:
+                    self.context._dataframe.dropNA()
                 else:
-                    try:
-                        del_fila = int(user_input)
-                        if del_fila not in self.context._dataframe.index:
-                            print(f"La fila con índice '{del_fila}' no existe. Dimensiones del DataFrame: {self.context._dataframe.shape}")
-                        else:
-                            self.context._dataframe.drop(del_fila, axis=0, inplace=True)
-                            print('Índices actuales:', self.context._dataframe.index)
-                    except ValueError:
-                        print("Entrada inválida. Ingresa un número o 'atras'.")
+                    return
             elif del_options == 2:
                 del_col = input('¿Qué columna deseas borrar, escribe "atras" para volver: ').strip()
                 if del_col.lower() == 'atras':
@@ -138,7 +131,24 @@ class Duplicados(State):
 
 class Info(State):
     def ejecutar(self):
-        print(self.context._dataframe.info())
+        
+        while True:
+                try:
+                    _option: int = int(input('Que deseas hacer? Ver info(1), Describe(2), Shape(3) o Salir(0)'))
+                except ValueError:
+                    print("Entrada inválida.")
+                    continue
+
+                if _option == 1:
+                    print(self.context._dataframe.info())
+                elif _option == 2:
+                    print(self.context._dataframe.describe())
+                elif _option == 3:
+                    print(self.context._dataframe.shape)
+                elif _option == 0:
+                    break
+                else:
+                    print("Opción no reconocida.")
         from states.cleaning import LimpiezaDeDatos
         self.context.transition_to(LimpiezaDeDatos())
         return
