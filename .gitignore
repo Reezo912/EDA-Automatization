@@ -2,9 +2,7 @@ src/__pycache__
 .env
 .learn
 src/appcopy.py
-src/context.py
-src/main.py
+src/app.py
 src/states.py
-src/UI.py
-src/app.ipynb
+UI.py
 __pycache__
