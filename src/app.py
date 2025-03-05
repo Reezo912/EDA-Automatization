@@ -6,7 +6,13 @@ from abc import ABC, abstractmethod  # Se importa ABC y abstractmethod para defi
 import sys
 
 
-#TODO Separar logica de IU, cambio de estados y carga de archivo
+# TODO Refactorizar codigo, try/catch dentro de context y division en scripts
+# TODO Eliminar funcion eliminar filas(No es necesaria) y reemplazar por eliminar duplicados
+# TODO Implementar que todas las salidas de menu sean el 0
+# TODO Implementar describe en Class Info
+# TODO Hacer esta clase accesible en cualquier momento.
+# Implementar mas funciones de visualizacion de datos, por ahora en test.
+# TODO Separar logica de IU, cambio de estados y carga de archivo
 
 # --------------------------------------------------------------------
 # Clase Context
@@ -21,8 +27,11 @@ class Context:
     _dataframe = None     # Atributo que contiene el DataFrame con los datos cargados
 
     def __init__(self):
-        # Se utiliza un bucle para asegurarse de que el usuario ingrese un archivo válido.
-        while True:
+        # Incio las listas que mas tarde utilizare para almacenar los valores numericos y categoricos
+        self.valores_cat = []
+        self.valores_num = []
+               
+        while True:             # Se utiliza un bucle para asegurarse de que el usuario ingrese un archivo válido.
             # Se solicita el nombre del archivo al usuario.
             n_archivo = input('Introduce el nombre del archivo, "abort" para salir: ')
             # Funcion de salida
@@ -82,14 +91,15 @@ class State(ABC):
 class Salir(State):
     def ejecutar(self):
         print('Saliendo del programa!')
-        sys.exit()
+        #sys.exit()
+        return
 
 
 class Main(State):  # Menu incial y principal
     def ejecutar(self):
         # Solicita input para cambio de menu.
         while True:
-            tarea: int = int(input('¿Que deseas hacer? Limpieza(1) Representacion(2) Guardar(3) salir(4))'))
+            tarea: int = int(input('¿Que deseas hacer? Limpieza(1) Representacion(2) Guardar(3) salir(0))'))
 
             try:
                 if tarea == 1:              # Entra dentro del menu Limpieza de Datos
@@ -102,9 +112,9 @@ class Main(State):  # Menu incial y principal
                     nombre_archivo = input('¿Como deseas llamar a tu archivo?')
                     self.context._dataframe.to_csv(f'.//data/{nombre_archivo}.csv')
 
-                elif tarea == 4:            # Salir y cerrar programa
+                elif tarea == 0:            # Salir y cerrar programa
                     self.context.transition_to(Salir())
-                    return False
+                    break
                 # Devuelve un error si no exite el input
                 else:
                     print("Opción no reconocida, intenta de nuevo.")
@@ -116,7 +126,7 @@ class Main(State):  # Menu incial y principal
 class LimpiezaDeDatos(State):           # Menu limpieza de datos y manipulacion del dataFrame
     def ejecutar(self) -> None:
         #Solicita input al usuario para entrar en siguiente menu
-        tarea = int(input('¿Que deseas hacer? NAs(1) Borrar(2) Duplicados(3) Info(4) TestMostrar(5) Atras(6)'))   
+        tarea = int(input('¿Que deseas hacer? NAs(1) Borrar(2) Duplicados(3) Info(4) TestMostrar(5) Atras(0)'))   
         
         if tarea == 1:              #Menu limpiar NAs
             self.context.transition_to(MissingData())
@@ -133,7 +143,7 @@ class LimpiezaDeDatos(State):           # Menu limpieza de datos y manipulacion 
         elif tarea == 5:            # Mostrar datos
             self.context.transition_to(MostrarDatos())
 
-        elif tarea == 6:            # Vuelve al estado anterior
+        elif tarea == 0:            # Vuelve al estado anterior
             self.context.transition_to(Main())
 
         else:
@@ -222,8 +232,6 @@ class Borrar(State):         # Menu borrado de elementos
         self.context.transition_to(LimpiezaDeDatos())
 
 
-# TODO Añadir funcion para comprobar todo el DF
-
 class Duplicados(State):
     def ejecutar(self):
     
@@ -264,8 +272,7 @@ class Info(State):
         
         self.context.transition_to(LimpiezaDeDatos())
 
-# TODO Hacer esta clase accesible en cualquier momento.
-# Implementar mas funciones de visualizacion de datos, por ahora en test.
+
 class MostrarDatos(State):
     def ejecutar(self) -> None:
         opcion:int = int(input('Que deseas hacer? Mostrar 10 primeras filas(1) o una fila en concreto(2): '))
@@ -291,8 +298,36 @@ class MostrarDatos(State):
 
 class RepresentacionDatos(State):
     def ejecutar(self) -> None:
-        tarea = input('Que quieres? (volver)').lower()
-        self.context.transition_to(Main())
+        opcion = int(input('Que quieres? Elegir variables categoricas y numericas(1) o volver(2): '))
+        if opcion == 1:             # Clasificar valores numericos y categoricos
+            self.context.transition_to(IdentificacionVariables())
+        else:
+            self.context.transition_to(Main())
+
+class IdentificacionVariables(State):
+    def ejecutar(self) -> None:
+        while True:
+            
+            _opcion = int(input('Indica que variables son categoricas(1), eliminar de la lista(2) visualizar(3), o salir(0)'))
+            
+
+            if _opcion == 0:                        # Salir del menu
+                break
+
+            elif _opcion == 1:                      # Añadir valores a la lista
+                var_cat = input('Escribe el nombre exacto de la columna: ')
+                self.context.valores_cat.append(var_cat)
+
+            elif _opcion == 2:                      # Borrar indice lista
+                del_var_cat = input('Escribe el nombre exacto del valor que deseas eliminar: ')
+                self.context.valores_cat.remove(del_var_cat)
+
+            elif _opcion == 3:                      # Mostrar lista
+                print(self.context.valores_cat)
+        
+        self.context.transition_to(RepresentacionDatos())
+
+
 
 
 
